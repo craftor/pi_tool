@@ -34,6 +34,9 @@ class Ui_Dialog(object):
         self.pushButton_Refresh = QtWidgets.QPushButton(Dialog)
         self.pushButton_Refresh.setObjectName("pushButton_Refresh")
         self.gridLayout_3.addWidget(self.pushButton_Refresh, 0, 0, 1, 1)
+        self.pushButton_UpdateAll = QtWidgets.QPushButton(Dialog)
+        self.pushButton_UpdateAll.setObjectName("pushButton_UpdateAll")
+        self.gridLayout_3.addWidget(self.pushButton_UpdateAll, 0, 1, 1, 1)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -43,6 +46,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "树莓派改IP"))
         self.pushButton_ClearLog.setText(_translate("Dialog", "清空日志"))
         self.pushButton_Refresh.setText(_translate("Dialog", "刷新"))
+        self.pushButton_UpdateAll.setText(_translate("Dialog", "全部更新"))
 
 import source_rc
 

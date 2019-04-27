@@ -104,6 +104,8 @@ class Dialog(QDialog, Ui_Dialog):
         self.udp_sender = udp_sender(1060)
         self.log_print("正在扫描设备...")
 
+        self.lines = []
+
     def log_print(self, str):
         """
         带时间日期的打印信息输出
@@ -145,7 +147,7 @@ class Dialog(QDialog, Ui_Dialog):
         增加一行
         """
         for i in range(self.tableWidget.rowCount()):
-            # 已经有了, 则不再插入
+            # 已经有了
             if self.tableWidget.item(i, 0).text() == ip_list[0]:
                 return
 
@@ -157,19 +159,24 @@ class Dialog(QDialog, Ui_Dialog):
         self.tableWidget.setItem(row,2,QTableWidgetItem(ip_list[2]))
         self.tableWidget.setItem(row,3,QTableWidgetItem(ip_list[3]))
 
-        button = QPushButton(
-            self.tr('更新'),
-            self.parent(),
-            clicked=lambda: self.ip_change(ip_list, row)
-            )
+        # button = QPushButton(
+        #     self.tr('更新'),
+        #     self.parent(),
+        #     clicked=lambda: self.ip_change(ip_list, row)
+        #     )
+        check = QCheckBox()
+
         h = QHBoxLayout()
         h.setAlignment(Qt.AlignCenter)
-        h.addWidget(button)
+        h.addWidget(check)
         w = QWidget()
         w.setLayout(h)
-        self.tableWidget.setCellWidget(row, 4, w)
+        
+        self.tableWidget.setCellWidget(row, 4, check)
         self.tableWidget.resizeRowsToContents()
         # self.tableWidget.resizeColumnsToContents()
+
+        self.lines.append(ip_list)
 
     def ip_change(self, my_list, row):
         """
@@ -182,8 +189,16 @@ class Dialog(QDialog, Ui_Dialog):
         cmd = self.udp_sender.gen_ip_change_cmd(new_list)
         # print(cmd)
         self.udp_sender.send_cmd(my_list[1], cmd)
-        self.remove_line(row)
+        # self.remove_line(row)
         self.log_print("更新 ({}){} 至 {}，重启中...".format(my_list[0], my_list[1], new_list[1]))
+
+    def refresh(self):
+        """
+        刷新
+        """
+        self.tableWidget.clearContents()
+        self.tableWidget.setRowCount(0)
+        self.lines = []
 
     @pyqtSlot()
     def on_pushButton_ClearLog_clicked(self):
@@ -197,8 +212,19 @@ class Dialog(QDialog, Ui_Dialog):
         """
         刷新目录
         """
-        self.tableWidget.clearContents()
-        self.tableWidget.setRowCount(0)
+        self.refresh()
+
+    @pyqtSlot()
+    def on_pushButton_UpdateAll_clicked(self):
+        """
+        全部更新
+        """
+        for row in range(self.tableWidget.rowCount()):
+            if self.tableWidget.cellWidget(row, 4).isChecked():
+                self.ip_change(self.lines[row], row)
+                # self.log_print("")
+        self.refresh()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -206,4 +232,3 @@ if __name__ == '__main__':
     main.show()
     sys.exit(app.exec_())
     
-
