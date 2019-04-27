@@ -17,12 +17,9 @@ from PyQt5.QtCore import QThread, pyqtSignal
 
 from Ui_main import Ui_Dialog
 
-from scan import NmapScan
-from udp_cmder import udp_cmder
-from udp_listener import udp_listener
+from pi_udp import udp_sender, udp_receiver
 
 import subprocess
-import paramiko
 import datetime
 import time
 import socket
@@ -104,7 +101,7 @@ class Dialog(QDialog, Ui_Dialog):
         self.tk3.start()
 
         # Up and Down
-        self.udp_sender = udp_cmder(1060)
+        self.udp_sender = udp_sender(1060)
         self.log_print("正在扫描设备...")
 
     def log_print(self, str):
@@ -121,7 +118,7 @@ class Dialog(QDialog, Ui_Dialog):
         初始化Table
         """
         self.tableWidget.setColumnCount(5)##设置表格一共有五列
-        self.tableWidget.setHorizontalHeaderLabels(['mac', 'ip', '子网掩码', '网关', '更新',])#设置表头文字
+        self.tableWidget.setHorizontalHeaderLabels(['mac', 'ip', 'mask', 'gateway', 'update',])#设置表头文字
         self.tableWidget.horizontalHeader().setSectionsClickable(False) #可以禁止点击表头的列
         # self.tableWidget.horizontalHeader().setStretchLastSection(True)
 
@@ -152,7 +149,7 @@ class Dialog(QDialog, Ui_Dialog):
             if self.tableWidget.item(i, 0).text() == ip_list[0]:
                 return
 
-        self.log_print("发现新的设备")
+        self.log_print("发现新的设备:" + str(ip_list[0]))
         row = self.tableWidget.rowCount()
         self.tableWidget.setRowCount(row + 1)
         self.tableWidget.setItem(row,0,QTableWidgetItem(ip_list[0]))
@@ -163,7 +160,7 @@ class Dialog(QDialog, Ui_Dialog):
         button = QPushButton(
             self.tr('更新'),
             self.parent(),
-            clicked=lambda: self.ip_change(ip_list)
+            clicked=lambda: self.ip_change(ip_list, row)
             )
         h = QHBoxLayout()
         h.setAlignment(Qt.AlignCenter)
@@ -172,26 +169,21 @@ class Dialog(QDialog, Ui_Dialog):
         w.setLayout(h)
         self.tableWidget.setCellWidget(row, 4, w)
         self.tableWidget.resizeRowsToContents()
-        self.tableWidget.resizeColumnsToContents()
+        # self.tableWidget.resizeColumnsToContents()
 
-    def ip_change(self, my_list):
+    def ip_change(self, my_list, row):
         """
         执行更新IP的命令
         """
-        rows = self.tableWidget.rowCount()
-        for i in range(rows):
-            # print(self.tableWidget.item(i,0).text())
-            if self.tableWidget.item(i, 0).text() == my_list[0] :
-                # print("Ready to send cmd to " + my_list[0])
-                new_list = [my_list[0], \
-                            self.tableWidget.item(i,1).text(), \
-                            self.tableWidget.item(i,2).text(), \
-                            self.tableWidget.item(i,3).text()]
-                cmd = self.udp_sender.gen_ip_change_cmd(new_list)
-                # print(cmd)
-                self.udp_sender.send_cmd(my_list[1], cmd)
-                self.remove_line(i)
-                self.log_print("更新 ({}){} 至 {}，重启中...".format(my_list[0], my_list[1], new_list[1]))
+        new_list = [my_list[0], \
+                    self.tableWidget.item(row,1).text(), \
+                    self.tableWidget.item(row,2).text(), \
+                    self.tableWidget.item(row,3).text()]
+        cmd = self.udp_sender.gen_ip_change_cmd(new_list)
+        # print(cmd)
+        self.udp_sender.send_cmd(my_list[1], cmd)
+        self.remove_line(row)
+        self.log_print("更新 ({}){} 至 {}，重启中...".format(my_list[0], my_list[1], new_list[1]))
 
     @pyqtSlot()
     def on_pushButton_ClearLog_clicked(self):
