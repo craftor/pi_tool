@@ -114,3 +114,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /pc/*.7z
+/pc/.eric6project
+/pc/.vscode
