@@ -88,7 +88,7 @@ class Dialog(QDialog, Ui_Dialog):
         self.setupUi(self)
 
         # 版本号
-        title = "树莓派改IP小工具 v" + str(VERSION)
+        title = "PiTool v" + str(VERSION)
         self.setWindowTitle(title)
 
         # 初始化表格
@@ -189,6 +189,7 @@ class Dialog(QDialog, Ui_Dialog):
         cmd = self.udp_sender.gen_ip_change_cmd(new_list)
         # print(cmd)
         self.udp_sender.send_cmd(my_list[1], cmd)
+        self.udp_sender.send_cmd('<broadcast>', cmd)
         # self.remove_line(row)
         self.log_print("更新 ({}){} 至 {}，重启中...".format(my_list[0], my_list[1], new_list[1]))
 
